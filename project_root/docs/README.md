@@ -214,7 +214,9 @@ curl -X POST "http://localhost:8000/ask" -H "Content-Type: application/json" -d 
 - **Research Collaborators**
 
 ## License
-This project is licensed under the MIT License.
+This project is licensed under the **Proprietary Software License** (v1.0).  
+Copyright © 2025 Jared Edwards. All rights reserved.   
+
 
 ## Contact
 For inquiries and collaborations, reach out to [your email or website].
