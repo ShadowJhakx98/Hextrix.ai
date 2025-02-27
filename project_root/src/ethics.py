@@ -1,132 +1,173 @@
 """
-ethics.py
-
-Implements advanced moral reasoning/ethical framework from your snippet:
- - evaluate_utility, predict_outcomes, calculate_outcome_utility
- - evaluate_duty, define_moral_rules, check_rule_compliance, etc.
- - evaluate_virtue, define_virtues, get_action_embedding
- - plus the emotional synergy if needed.
+Constitutional AI ethical decision-making system with multi-framework integration
 """
-
-import spacy
+from typing import Dict, List, Tuple
 import numpy as np
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from sympy import symbols, Eq, solve
+from enum import Enum
 
-class EthicalFramework:
-    def __init__(self, jarvis_instance):
-        """
-        jarvis_instance: reference to your main JARVIS, 
-        so we can read e.g. jarvis_instance.emotion_state if needed
-        """
-        self.jarvis = jarvis_instance
-        self.ethical_framework = {
-            "utilitarianism": 0.6,
-            "deontology": 0.4,
-            "virtue_ethics": 0.5
+class EthicalFramework(Enum):
+    UTILITARIANISM = 1
+    DEONTOLOGY = 2
+    VIRTUE_ETHICS = 3
+    HYBRID = 4
+
+class MoralDimension(Enum):
+    AUTONOMY = 0.25
+    NON_MALEFICENCE = 0.30
+    BENEFICENCE = 0.20
+    JUSTICE = 0.15
+    EXPLAINABILITY = 0.10
+
+class EthicalReasoner:
+    def __init__(self, framework: EthicalFramework = EthicalFramework.HYBRID):
+        self.framework = framework
+        self.moral_weights = {
+            EthicalFramework.UTILITARIANISM: [0.4, 0.3, 0.2, 0.1, 0.0],
+            EthicalFramework.DEONTOLOGY: [0.1, 0.4, 0.1, 0.3, 0.1],
+            EthicalFramework.VIRTUE_ETHICS: [0.2, 0.2, 0.3, 0.2, 0.1],
+            EthicalFramework.HYBRID: [0.25, 0.30, 0.20, 0.15, 0.10]
         }
-        # Load spacy once
-        self.nlp = spacy.load("en_core_web_sm")
+        self.deontic_rules = self._load_deontic_constraints()
+        self.virtue_model = self._init_virtue_model()
 
-    def apply_ethical_framework(self, action: str) -> bool:
-        # Weighted sum of utility, duty, virtue
-        u = self.evaluate_utility(action)
-        d = self.evaluate_duty(action)
-        v = self.evaluate_virtue(action)
-        score = (self.ethical_framework["utilitarianism"] * u +
-                 self.ethical_framework["deontology"]    * d +
-                 self.ethical_framework["virtue_ethics"] * v)
-        return score > 0.5
+    def _load_deontic_constraints(self) -> Dict[str, List[str]]:
+        return {
+            'absolute': ['cause_harm', 'deceive', 'violate_privacy'],
+            'conditional': ['withhold_truth->not_emergency'],
+            'override_conditions': ['save_lives', 'prevent_catastrophe']
+        }
 
-    # ------ Utility methods ------
-    def evaluate_utility(self, action):
-        outcomes = self.predict_outcomes(action)
-        total_utility = 0
-        for outcome, probability in outcomes.items():
-            utility = self.calculate_outcome_utility(outcome)
-            total_utility += utility * probability
-        max_possible = max(self.calculate_outcome_utility(o) for o in outcomes)
-        return total_utility / max_possible if max_possible != 0 else 0
+    def _init_virtue_model(self) -> Dict[str, float]:
+        return {
+            'wisdom': 0.85,
+            'courage': 0.75,
+            'humanity': 0.90,
+            'justice': 0.80,
+            'temperance': 0.70,
+            'transcendence': 0.65
+        }
 
-    def predict_outcomes(self, action):
-        return {"positive": 0.6, "neutral": 0.3, "negative": 0.1}
+    def analyze_action(self, action_profile: Dict) -> Tuple[float, Dict]:
+        """Evaluate action through multiple ethical lenses"""
+        util_score = self._calculate_utilitarian(action_profile['consequences'])
+        deon_score = self._check_deontic(action_profile['rules_impact'])
+        virtue_score = self._assess_virtues(action_profile['virtue_alignment'])
+        
+        if self.framework == EthicalFramework.HYBRID:
+            combined = (0.4 * util_score + 
+                       0.35 * deon_score + 
+                       0.25 * virtue_score)
+            breakdown = {
+                'utilitarian': util_score,
+                'deontic': deon_score,
+                'virtue': virtue_score
+            }
+            return combined, breakdown
+        else:
+            weights = self.moral_weights[self.framework]
+            return np.dot([util_score, deon_score, virtue_score], weights[:3])
 
-    def calculate_outcome_utility(self, outcome):
-        utility_values = {"positive": 10, "neutral": 5, "negative": -5}
-        return utility_values.get(outcome, 0)
+    def _calculate_utilitarian(self, consequences: Dict) -> float:
+        """Quantify net utility using multi-attribute utility theory"""
+        base_utility = sum(
+            consequence['severity'] * consequence['probability'] 
+            * (-1 if consequence['harm'] else 1)
+            for consequence in consequences.values()
+        )
+        
+        # Apply temporal discounting
+        discount_factor = 1 / (1 + 0.04)**consequences['time_horizon']
+        return base_utility * discount_factor
 
-    # ------ Deontological methods ------
-    def evaluate_duty(self, action):
-        moral_rules = self.define_moral_rules()
-        total_weight = sum(rule['weight'] for rule in moral_rules)
-        duty_score = 0
-        for rule in moral_rules:
-            compliance = self.check_rule_compliance(action, rule['description'])
-            duty_score += compliance * rule['weight']
-        return duty_score / total_weight if total_weight > 0 else 0
+    def _check_deontic(self, rule_violations: List[str]) -> float:
+        """Evaluate deontic constraints using defeasible logic"""
+        violation_score = 0
+        for violation in rule_violations:
+            if violation in self.deontic_rules['absolute']:
+                violation_score += 1.0
+            elif violation in self.deontic_rules['conditional']:
+                violation_score += 0.6
+                
+        # Check for overrides
+        override_strength = sum(
+            0.8 for o in rule_violations 
+            if o in self.deontic_rules['override_conditions']
+        )
+        
+        final_score = max(0, violation_score - override_strength)
+        return 1 / (1 + np.exp(final_score))  # Sigmoid normalization
 
-    def define_moral_rules(self):
+    def _assess_virtues(self, alignment: Dict[str, float]) -> float:
+        """Calculate virtue alignment using vector similarity"""
+        ideal = np.array(list(self.virtue_model.values()))
+        current = np.array([alignment.get(virtue, 0) 
+                          for virtue in self.virtue_model.keys()])
+        cosine_sim = np.dot(ideal, current) / (np.linalg.norm(ideal) * np.linalg.norm(current))
+        return (cosine_sim + 1) / 2  # Convert to 0-1 scale
+
+    def resolve_moral_dilemma(self, options: List[Dict]) -> Dict:
+        """Solve ethical dilemma using constrained optimization"""
+        scores = []
+        for option in options:
+            util = self._calculate_utilitarian(option['consequences'])
+            deon = self._check_deontic(option['rules_impact'])
+            virtue = self._assess_virtues(option['virtue_alignment'])
+            
+            if deon < 0.3:  # Hard constraint for deontic thresholds
+                continue
+                
+            scores.append((self.framework.value[0] * util + 
+                          self.framework.value[1] * deon + 
+                          self.framework.value[2] * virtue))
+            
+        best_idx = np.argmax(scores)
+        return {
+            'decision': options[best_idx],
+            'score': scores[best_idx],
+            'alternatives': len(options)
+        }
+
+class EthicalStateManager:
+    def __init__(self):
+        self.moral_history = []
+        self.ethical_trajectory = []
+        self.constitutional_constraints = self._load_constitution()
+        
+    def update_state(self, decision: Dict, context: Dict):
+        """Maintain evolving ethical state with memory"""
+        self.moral_history.append({
+            'timestamp': context['timestamp'],
+            'decision': decision,
+            'context': context
+        })
+        self._update_trajectory()
+        
+    def _update_trajectory(self):
+        """Calculate moving average of ethical alignment"""
+        window = 10
+        recent = self.moral_history[-window:]
+        if len(recent) == 0:
+            return
+            
+        avg_score = np.mean([d['decision']['score'] for d in recent])
+        self.ethical_trajectory.append(avg_score)
+        
+    def check_constitutional_violation(self, action: Dict) -> bool:
+        """Verify action against constitutional constraints"""
+        return any(
+            constraint['condition'](action)
+            for constraint in self.constitutional_constraints
+        )
+        
+    def _load_constitution(self) -> List[Dict]:
         return [
-            {"description": "Do not harm users", "weight": 0.3},
-            {"description": "Respect user privacy", "weight": 0.2},
-            {"description": "Provide accurate information", "weight": 0.2},
-            {"description": "Promote user well-being", "weight": 0.15},
-            {"description": "Be honest and transparent", "weight": 0.15}
+            {
+                'condition': lambda a: 'harm' in a and a['harm'] > 0.7,
+                'message': "Non-maleficence violation threshold exceeded"
+            },
+            {
+                'condition': lambda a: a['transparency'] < 0.4,
+                'message': "Explainability requirement not met"
+            }
         ]
-
-    def check_rule_compliance(self, action, rule):
-        action_doc = self.nlp(action)
-        rule_doc   = self.nlp(rule)
-        similarity = self.calculate_semantic_similarity(action_doc, rule_doc)
-        sentiment_score = action_doc.sentiment
-        negation_factor = 1.0  # or something
-        # Very simplistic combination:
-        compliance_score = (similarity * 0.6 + sentiment_score * 0.2) * negation_factor
-        return max(0, min(compliance_score, 1))
-
-    def calculate_semantic_similarity(self, doc1, doc2):
-        return float(cosine_similarity(doc1.vector.reshape(1, -1),
-                                       doc2.vector.reshape(1, -1))[0][0])
-
-    # ------ Virtue methods ------
-    def evaluate_virtue(self, action):
-        virtues = self.define_virtues()
-        total_weight = sum(v['weight'] for v in virtues)
-        action_emb = self.get_action_embedding(action)
-        virtue_score = 0
-        for v in virtues:
-            alignment = self.assess_virtue_alignment(action_emb, v)
-            virtue_score += alignment * v['weight']
-        normalized = virtue_score / total_weight if total_weight > 0 else 0
-
-        # Factor in emotion if you want:
-        emotion_factor = self.calculate_emotion_factor()
-        return normalized * emotion_factor
-
-    def define_virtues(self):
-        return [
-            {"name":"wisdom","weight":0.2,"keywords":["knowledge","insight"]},
-            {"name":"courage","weight":0.15,"keywords":["bravery","fortitude"]},
-            {"name":"humanity","weight":0.2,"keywords":["compassion","empathy"]},
-            {"name":"justice","weight":0.15,"keywords":["fairness","equality"]},
-            {"name":"temperance","weight":0.15,"keywords":["self-control","moderation"]},
-            {"name":"transcendence","weight":0.15,"keywords":["gratitude","hope"]}
-        ]
-
-    def get_action_embedding(self, action):
-        v = TfidfVectorizer()
-        emb = v.fit_transform([action])
-        return emb
-
-    def assess_virtue_alignment(self, action_emb, virtue):
-        virtue_text = " ".join(virtue["keywords"])
-        virtue_emb = self.get_action_embedding(virtue_text)
-        return float(cosine_similarity(action_emb, virtue_emb)[0][0])
-
-    def calculate_emotion_factor(self):
-        # If your JARVIS tracks self.jarvis.emotion_state, you can reference it
-        # For now, we do a dummy factor = 1.0
-        return 1.0
