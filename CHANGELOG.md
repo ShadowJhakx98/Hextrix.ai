@@ -1,6 +1,73 @@
 # CHANGELOG
 
 ## [Unreleased]
+
+## [1.1.0] - 2025-02-27
+### Added
+- OPUS codec support with dynamic bitrate adaptation in `audio_streaming.py`
+- AR overlay system with 3D projection in `gesture_recognition.py`
+- Multi-modal emotion fusion engine combining audio/gesture inputs
+- Code chunking system (`code_chunking.py`) and self-aware assistant core (`highly_self_aware_assistant.py`)
+- Real-time format transcoding for 7 audio formats (MP3/WAV/FLAC/AAC/OGG/WebM/OPUS)
+
+### Changed
+- Enhanced `audio_streaming.py` with FFmpeg-based adaptive transcoding
+- Upgraded `gesture_recognition.py` with emotional state visualization
+- Integrated emotional feedback into OPUS encoding parameters
+- Improved WebRTC negotiation logic with emotion-aware bitrate control
+
+### Fixed
+- Eliminated final latency spikes in live audio streaming
+- Resolved synchronization issues in AR overlay positioning
+- Corrected emotional valence calculations during high-arousal states
+
+---
+
+## [1.0.0] - YYYY-MM-DD
+### Added
+- Full integration of Whisper-1 for advanced speech-to-text capabilities.
+- Support for DALL·E 3 image generation in `image_processing.py`.
+- Gesture-based command controls in `gesture_recognition.py`.
+- Dynamic RGB lighting integration with ASUS Aura Sync and Razer Chroma.
+- API endpoints for live mode and multimodal queries in `main.py`.
+
+### Changed
+- Refactored `ui_automator.py` for better compatibility with diverse voice commands.
+- Improved error handling across all modules.
+- Optimized task planner in `planner_agent.py` for real-time performance.
+
+### Fixed
+- Resolved issues with inconsistent emotional state mapping in `emotions.py`.
+- Fixed incorrect OCR processing in `ocr_module.py` for high-resolution images.
+
+---
+
+## [0.9.0] - YYYY-MM-DD
+### Added
+- Initial prototypes for core modules
+- Basic Discord bot integration
+- Screen capture and OCR functionality
+- Sentiment analysis module
+- Core Flask app structure
+
+### Changed
+- Configuration structure improvements
+
+### Fixed
+- Logging utility bugs
+
+---
+
+## [0.0.1] - 2025-01-18
+### Added
+- TODO.md
+
+### Changed
+- Configuration structure
+
+### Fixed 
+- Minor logging issues
+
 ### Added
 - Initial setup for all core modules, including:
   - `main.py`: Central Flask app management.
@@ -33,51 +100,8 @@
 
 ---
 
-## [1.0.0] - YYYY-MM-DD
-### Added
-- Full integration of Whisper-1 for advanced speech-to-text capabilities.
-- Support for DALL·E 3 image generation in `image_processing.py`.
-- Gesture-based command controls in `gesture_recognition.py`.
-- Dynamic RGB lighting integration with ASUS Aura Sync and Razer Chroma.
-- API endpoints for live mode and multimodal queries in `main.py`.
-
-### Changed
-- Refactored `ui_automator.py` for better compatibility with diverse voice commands.
-- Improved error handling across all modules.
-- Optimized task planner in `planner_agent.py` for real-time performance.
-
-### Fixed
-- Resolved issues with inconsistent emotional state mapping in `emotions.py`.
-- Fixed incorrect OCR processing in `ocr_module.py` for high-resolution images.
-
----
-
-## [0.9.0] - YYYY-MM-DD
-### Added
-- Initial prototypes for modules, including task planner, memory management, and multimodal processing.
-- Basic Discord bot commands and integration in `discord_bot.py`.
-- Screen capture and OCR functionality in `specialized_sub_agent.py`.
-- Sentiment analysis module in `emotions.py`.
-- Core Flask app structure in `main.py`.
-
 ### Changed
 - Adjusted configuration structure in `config.py` for better environment management.
 
-### Fixed
-- Minor bugs in logging utilities (`logging_utils.py`).
 
-
-
----
-
-## [0.0.1] - 2025-1-18
-### Added
-- TODO.md
-
-
-### Changed
-- Adjusted configuration structure in `config.py` for better environment management.
-
-### Fixed
-- Minor bugs in logging utilities (`logging_utils.py`).
 
