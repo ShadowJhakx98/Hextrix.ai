@@ -123,9 +123,6 @@ Licensing Inquiries: Allow 5-7 business days for review of commercial use applic
 
 *This document supersedes all prior versions of the KairoMind license agreement.*
 
-[Ethical Compliance Badge
-*Embed this badge when using KairoMind in compliant deployments.*
-
 ---
 
 **Changes from v2.3 → v3.1:**
