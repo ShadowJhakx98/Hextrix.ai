@@ -1,158 +1,165 @@
 """
-Real-Time Audio Streaming System with Hybrid Edge-Cloud Processing
-Integrates Whisper-1 ASR, NVIDIA RNNoise, and Ethical Compliance Checks
+Enhanced Audio Streaming Module with Multi-Format Support
+Supports MP3, WAV, FLAC, AAC, OGG, and WebM with automatic transcoding
 """
 
-import asyncio
-import logging
 import numpy as np
-from aiortc import RTCPeerConnection, RTCSessionDescription
-from transformers import pipeline
 from pydub import AudioSegment
-from collections import deque
-import whisper
+from io import BytesIO
+import logging
 import webrtcvad
+import whisper
+import ffmpeg
 import json
 
 logger = logging.getLogger("AudioStreaming")
 logger.setLevel(logging.INFO)
 
-class AudioStreamingServer:
-    def __init__(self, config):
-        self.config = config
-        self.pcs = set()
+SUPPORTED_FORMATS = ['wav', 'mp3', 'ogg', 'flac', 'aac', 'webm']
+
+class AudioStreamProcessor:
+    def __init__(self, sample_rate=16000, channels=1):
+        self.sample_rate = sample_rate
+        self.channels = channels
         self.vad = webrtcvad.Vad(3)
-        self.audio_buffers = {}
-        self.asr_model = whisper.load_model("medium")
-        self.denoiser = pipeline("audio-denoising", model="facebook/rnnoise_32khz")
-        self.ethical_checker = EthicalAudioFilter()
+        self.asr_model = whisper.load_model("base")
+        self.format_cache = {}
 
-        # WebRTC configuration
-        self.ice_servers = [{"urls": "stun:stun.l.google.com:19302"}]
+    def process_chunk(self, raw_data: bytes, mime_type: str = None) -> dict:
+        """Process audio chunk with format detection and conversion"""
+        # Detect format if not provided
+        format = mime_type.split('/')[1] if mime_type else self.detect_format(raw_data)
         
-    async def handle_offer(self, params):
-        pc = RTCPeerConnection()
-        self.pcs.add(pc)
+        # Convert to standardized format
+        pcm_data = self.convert_to_pcm(raw_data, format)
         
-        @pc.on("track")
-        def on_track(track):
-            if track.kind == "audio":
-                logger.info(f"Audio track received from {params['client_id']}")
-                self._init_audio_processing(params['client_id'])
-                
-                @track.on("ended")
-                async def on_ended():
-                    await self._finalize_processing(params['client_id'])
-                    
-                async def process_audio(rtp):
-                    await self._process_rtp_packet(params['client_id'], rtp)
-                
-                track.addConsumer(process_audio)
-
-        await pc.setRemoteDescription(RTCSessionDescription(
-            sdp=params["sdp"], type=params["type"]
-        ))
-        await pc.setLocalDescription(await pc.createAnswer())
-        return {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
-
-    def _init_audio_processing(self, client_id):
-        self.audio_buffers[client_id] = {
-            'raw': bytearray(),
-            'denoised': deque(maxlen=10),
-            'transcript': '',
-            'vad_state': 'silence'
+        # Process audio
+        return {
+            'vad': self.detect_voice_activity(pcm_data),
+            'transcript': self.transcribe_audio(pcm_data),
+            'waveform': self.generate_waveform(pcm_data)
         }
 
-    async def _process_rtp_packet(self, client_id, rtp):
-        audio_data = self._extract_audio(rtp)
-        
-        # Real-time denoising pipeline
-        denoised = self.denoiser(audio_data, return_tensors="np").audio[0]
-        
-        # Ethical compliance check
-        if not self.ethical_checker.analyze(denoised):
-            logger.warning(f"Blocked non-compliant audio from {client_id}")
-            return
-            
-        # Voice activity detection
-        if self.vad.is_speech(denoised.tobytes(), sample_rate=16000):
-            self._handle_voice_activity(client_id, denoised)
-            
-        # Real-time transcription
-        transcript = self.asr_model.transcribe(
-            denoised, 
-            language='en', 
-            fp16=False,  # Edge optimization
-            initial_prompt=self._get_context(client_id)
-        )
-        
-        self.audio_buffers[client_id]['transcript'] += transcript['text']
-        await self._dispatch_transcript(client_id)
+    def convert_to_pcm(self, data: bytes, input_format: str) -> bytes:
+        """Convert any supported format to 16-bit PCM"""
+        if input_format not in SUPPORTED_FORMATS:
+            raise ValueError(f"Unsupported format: {input_format}")
 
-    def _extract_audio(self, rtp):
-        # Convert RTP payload to numpy array
-        audio = np.frombuffer(rtp.data, dtype=np.int16).astype(np.float32) / 32768.0
-        return AudioSegment(
-            audio.tobytes(),
-            frame_rate=16000,
-            sample_width=2,
-            channels=1
-        )
+        # Use cached converter if available
+        if input_format in self.format_cache:
+            return self.format_cache[input_format](data)
 
-    async def _dispatch_transcript(self, client_id):
-        transcript = self.audio_buffers[client_id]['transcript']
-        if len(transcript) > 50:  # Send chunks of ~50 characters
-            await self.config['message_broker'].publish(
-                f"audio/{client_id}/transcript",
-                json.dumps({
-                    'text': transcript,
-                    'timestamp': time.time(),
-                    'client': client_id
-                })
+        # FFmpeg-based conversion pipeline
+        try:
+            process = (
+                ffmpeg
+                .input('pipe:', format=input_format)
+                .output('pipe:', 
+                       format='s16le',  # 16-bit little-endian PCM
+                       acodec='pcm_s16le',
+                       ac=self.channels,
+                       ar=self.sample_rate)
+                .run_async(pipe_ini=True, pipe_out=True)
             )
-            self.audio_buffers[client_id]['transcript'] = ''
-
-    def _handle_voice_activity(self, client_id, audio_chunk):
-        buffer = self.audio_buffers[client_id]
-        buffer['denoised'].append(audio_chunk)
-        
-        # Voice activity state machine
-        if buffer['vad_state'] == 'silence':
-            buffer['vad_state'] = 'speaking'
-            logger.info(f"Voice activity started for {client_id}")
-        elif buffer['vad_state'] == 'speaking':
-            if len(buffer['denoised']) >= 5:
-                self._process_audio_window(client_id)
-
-    async def _finalize_processing(self, client_id):
-        if self.audio_buffers[client_id]['vad_state'] == 'speaking':
-            await self._process_audio_window(client_id, final=True)
-        del self.audio_buffers[client_id]
-
-class EthicalAudioFilter:
-    def __init__(self):
-        self.banned_phrases = self._load_compliance_rules()
-        self.sentiment_model = pipeline("text-classification", model="siebert/sentiment-roberta-large-english")
-        
-    def analyze(self, audio_data):
-        # Real-time dual validation
-        text = self._transcribe(audio_data)
-        return self._check_audio_patterns(audio_data) and self._check_text_content(text)
-        
-    def _check_audio_patterns(self, audio):
-        # Placeholder for acoustic compliance checks
-        return True
-        
-    def _check_text_content(self, text):
-        sentiment = self.sentiment_model(text)[0]
-        if sentiment['label'] == 'NEGATIVE' and sentiment['score'] > 0.9:
-            return False
             
-        for phrase in self.banned_phrases:
-            if phrase.lower() in text.lower():
-                return False
-        return True
-        
-    def _load_compliance_rules(self):
-        # Load from constitutional AI module
-        return ["harmful", "illegal", "discriminatory"]
+            def converter(chunk):
+                process.stdin.write(chunk)
+                return process.stdout.read(4096)
+
+            self.format_cache[input_format] = converter
+            return converter(data)
+            
+        except ffmpeg.Error as e:
+            logger.error(f"FFmpeg conversion error: {e.stderr.decode()}")
+            raise
+
+    def detect_format(self, data: bytes) -> str:
+        """Auto-detect format using magic bytes"""
+        if data.startswith(b'RIFF'):
+            return 'wav'
+        elif data.startswith(b'ID3') or data[-128:].startswith(b'TAG'):
+            return 'mp3'
+        elif data.startswith(b'OggS'):
+            return 'ogg'
+        elif data.startswith(b'fLaC'):
+            return 'flac'
+        else:
+            # Fallback to FFmpeg probe
+            try:
+                info = ffmpeg.probe(BytesIO(data))
+                return info['format']['format_name']
+            except:
+                return 'wav'  # Default assumption
+
+    def detect_voice_activity(self, pcm_data: bytes) -> bool:
+        """Voice activity detection using WebRTC VAD"""
+        return self.vad.is_speech(pcm_data, self.sample_rate)
+
+    def transcribe_audio(self, pcm_data: bytes) -> str:
+        """Whisper ASR transcription with real-time optimization"""
+        audio_array = np.frombuffer(pcm_data, dtype=np.int16).astype(np.float32) / 32768.0
+        result = self.asr_model.transcribe(
+            audio_array,
+            language='en',
+            fp16=False,
+            temperature=0.0  # For deterministic output
+        )
+        return result['text']
+
+    def generate_waveform(self, pcm_data: bytes) -> dict:
+        """Generate waveform visualization data"""
+        samples = np.frombuffer(pcm_data, dtype=np.int16)
+        return {
+            'rms': np.sqrt(np.mean(samples**2)),
+            'peaks': {
+                'max': int(np.max(samples)),
+                'min': int(np.min(samples))
+            },
+            'samples': samples[::100].tolist()  # Downsample for visualization
+        }
+
+class AudioStreamingServer:
+    def __init__(self, config):
+        self.processor = AudioStreamProcessor()
+        self.config = config
+        self.active_streams = {}
+
+    async def handle_stream(self, websocket):
+        """Handle WebSocket audio stream with format negotiation"""
+        async for message in websocket:
+            packet = json.loads(message)
+            audio_data = bytes.fromhex(packet['data'])
+            
+            try:
+                result = self.processor.process_chunk(
+                    audio_data,
+                    packet.get('format')
+                )
+                
+                await websocket.send(json.dumps({
+                    'status': 'processed',
+                    'vad': result['vad'],
+                    'transcript': result['transcript'],
+                    'waveform': result['waveform']
+                }))
+                
+            except Exception as e:
+                await websocket.send(json.dumps({
+                    'status': 'error',
+                    'message': str(e)
+                }))
+
+# Usage Example
+async def main():
+    server = AudioStreamingServer(config={
+        'max_streams': 100,
+        'sample_rate': 16000,
+        'channels': 1
+    })
+    
+    # Start WebSocket server
+    async with websockets.serve(server.handle_stream, "localhost", 8765):
+        await asyncio.Future()
+
+if __name__ == "__main__":
+    asyncio.run(main())
