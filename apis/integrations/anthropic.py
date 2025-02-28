@@ -7,6 +7,7 @@ import os
 import base64
 import json
 import logging
+import mimetypes
 from typing import List, Dict, Union, Generator, Optional
 from dataclasses import dataclass
 import boto3
@@ -62,7 +63,7 @@ class AnthropicClient:
         elif cloud_provider == "google":
             self.google_project = kwargs.get("google_project")
             self.credentials = self._authenticate_google()
-            self.client = AnthropicVertex(credentials=self.credentials)
+            self.client = AnthropicVertex(credentials=self.credentials, project_id=self.google_project)
         else:
             raise ValueError("Unsupported cloud provider. Choose 'aws' or 'google'")
 
@@ -207,4 +208,45 @@ if __name__ == "__main__":
                 {"type": "image", "source": aws_client._encode_image("photo.jpg")}
             ]
         }],
-        max_tokens=1000
+        max_tokens=1000,
+        temperature=0.7
+    )
+    
+    print(response["content"][0]["text"])
+    
+    # Google Example
+    google_client = AnthropicClient(
+        cloud_provider="google", 
+        google_project="your-google-project"
+    )
+    
+    stream_response = google_client.create_message(
+        model="claude-3-sonnet-20240229",
+        messages=[{
+            "role": "user",
+            "content": "Write a short poem about technology"
+        }],
+        stream=True
+    )
+    
+    # Process streaming response
+    for chunk in stream_response:
+        print(chunk, end="", flush=True)
+    
+    # Async example
+    import asyncio
+    
+    async def run_async_example():
+        client = AnthropicClient()
+        response = await client.async_create_message(
+            model="claude-3-opus-20240229",
+            messages=[{
+                "role": "user",
+                "content": "Explain quantum computing in simple terms"
+            }],
+            max_tokens=500
+        )
+        print(response.content[0].text)
+    
+    # Uncomment to run async example
+    # asyncio.run(run_async_example())
