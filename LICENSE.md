@@ -13,7 +13,7 @@
 
 ## 1. Definitions
 
-- **Software**: The KairoMind AI system, including all neural architectures (e.g., GPT-4o integration, Jetson AGX Thor edge modules), ethical governance frameworks, and associated documentation.
+- **Software**: The Hextrix Ai AI system, including all neural architectures (e.g., GPT-4o integration, Jetson AGX Thor edge modules), ethical governance frameworks, and associated documentation.
 - **User**: Any individual or entity interacting with the Software.
 - **Commercial Use**: Deployment for revenue-generating activities, including enterprise robotics, healthcare diagnostics, or IoT monetization.
 - **Edge Deployment**: Operation on NVIDIA Jetson AGX Thor or equivalent embedded systems.
@@ -56,7 +56,7 @@
 
 Users must maintain:
 
-- **GDPR/CCPA**: Automated DSAR handling via Merkle-tree audit trails (§4.2, KairoMind Architecture Whitepaper)
+- **GDPR/CCPA**: Automated DSAR handling via Merkle-tree audit trails (§4.2, Hextrix Ai Architecture Whitepaper)
 - **AI Act Conformity**: 89 risk classifiers updated hourly for high-risk deployments[^2][^4]
 - **COPPA**: Age verification heuristics (99.2% accuracy) for educational applications[^3][^4]
 
@@ -66,7 +66,7 @@ Users must maintain:
 - **Content Generation**: NSFW capabilities disabled by default; enablement requires:
     - 18+ age verification via government ID hashing
     - Geo-fencing excluding jurisdictions with strict morality laws[^1][^3]
-- **Robotics**: Humanoid systems using KairoMind must implement dual kill switches (software + physical emergency stop)[^4][^6]
+- **Robotics**: Humanoid systems using Hextrix Ai must implement dual kill switches (software + physical emergency stop)[^4][^6]
 
 ---
 
@@ -118,10 +118,10 @@ Disputes resolved under Delaware General Corporation Law with binding arbitratio
 
 **Contact:**
 Jared Edwards
-kairomindai@gmail.com
+Hextrix Aiai@gmail.com
 Licensing Inquiries: Allow 5-7 business days for review of commercial use applications.
 
-*This document supersedes all prior versions of the KairoMind license agreement.*
+*This document supersedes all prior versions of the Hextrix Ai license agreement.*
 
 ---
 
