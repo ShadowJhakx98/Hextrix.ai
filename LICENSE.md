@@ -13,7 +13,7 @@
 
 ## 1. Definitions
 
-- **Software**: The Hextrix Ai AI system, including all neural architectures (e.g., GPT-4o integration, Jetson AGX Thor edge modules), ethical governance frameworks, and associated documentation.
+- **Software**: The Hextrix Ai system, including all neural architectures (e.g., GPT-4o integration, Jetson AGX Thor edge modules), ethical governance frameworks, and associated documentation.
 - **User**: Any individual or entity interacting with the Software.
 - **Commercial Use**: Deployment for revenue-generating activities, including enterprise robotics, healthcare diagnostics, or IoT monetization.
 - **Edge Deployment**: Operation on NVIDIA Jetson AGX Thor or equivalent embedded systems.
