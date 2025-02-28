@@ -1,9 +1,9 @@
-# KairoMind
+# Hextrix Ai
 README.md
 
 Project Overview
 
-This project implements a sophisticated AI assistant named kairomind, integrating multiple functionalities such as real-time streaming, advanced planning, ethical reasoning, emotion tracking, and multimodal AI interactions. Each file in this project contributes to the overall capabilities of kairomind, making it a powerful tool for various applications ranging from personal assistance to professional decision support.
+This project implements a sophisticated AI assistant named Hextrix Ai, integrating multiple functionalities such as real-time streaming, advanced planning, ethical reasoning, emotion tracking, and multimodal AI interactions. Each file in this project contributes to the overall capabilities of Hextrix Ai, making it a powerful tool for various applications ranging from personal assistance to professional decision support.
 
 Features
 
@@ -35,13 +35,13 @@ ethics.py: Implements a moral reasoning framework including utility, duty, and v
 
 gemini_mode.py: Handles real-time audio and video streaming with Gemini 2.0.
 
-kairomind_alexa_skill.py: Integrates kairomind with Alexa skills.
+Hextrix Ai_alexa_skill.py: Integrates Hextrix Ai with Alexa skills.
 
-kairomind.py: The main kairomind class that unifies all modules and handles commands.
+Hextrix Ai.py: The main Hextrix Ai class that unifies all modules and handles commands.
 
 local_mode.py: Provides fallback for local audio and video processing without Gemini.
 
-main.py: Entry point for running kairomind.
+main.py: Entry point for running Hextrix Ai.
 
 mem_drive.py: Manages memory storage and integration with cloud services.
 
@@ -87,10 +87,10 @@ Follow the PEP 8 style guide for Python.
 Ensure all modules are properly documented.
 
 Write unit tests for new features.
-# KairoMind Project
+# Hextrix Ai Project
 
 ## Overview
-KairoMind is an advanced multi-model AI assistant designed for real-time on-device inference, integrating various AI frameworks and hardware components to achieve optimal performance, efficiency, and scalability. The project leverages a hybrid architecture that combines cloud computing, edge processing, quantum computing, and neural network optimizations.
+Hextrix Ai is an advanced multi-model AI assistant designed for real-time on-device inference, integrating various AI frameworks and hardware components to achieve optimal performance, efficiency, and scalability. The project leverages a hybrid architecture that combines cloud computing, edge processing, quantum computing, and neural network optimizations.
 
 ## Features
 ### Core AI Capabilities
@@ -127,8 +127,8 @@ KairoMind is an advanced multi-model AI assistant designed for real-time on-devi
 ### Setup
 1. **Clone Repository**:
    ```bash
-   git clone https://github.com/yourusername/KairoMind.git
-   cd KairoMind
+   git clone https://github.com/yourusername/Hextrix Ai.git
+   cd Hextrix Ai
    ```
 2. **Install Dependencies**:
    ```bash
@@ -151,7 +151,7 @@ KairoMind is an advanced multi-model AI assistant designed for real-time on-devi
 ### API Endpoints
 | Method | Endpoint | Description |
 |--------|---------|-------------|
-| `POST` | `/ask` | Submit a query to KairoMind |
+| `POST` | `/ask` | Submit a query to Hextrix Ai |
 | `GET` | `/status` | Check system health |
 | `POST` | `/upload` | Upload custom AI models |
 | `GET` | `/logs` | Retrieve processing logs |
@@ -222,7 +222,7 @@ Copyright © 2025 Jared Edwards. All rights reserved.
 ## Contact
 For inquiries and collaborations, reach out to [your email or website].
 
-# kairomind Project
+# Hextrix Ai Project
 
 This project is a sophisticated and advanced AI assistant designed to integrate multiple functionalities such as real-time streaming, multimodal AI interactions, planning, emotional modeling, and memory management.
 
@@ -242,10 +242,10 @@ This project is a sophisticated and advanced AI assistant designed to integrate 
 - `ethics.py`: Ethical decision-making framework with AI logic.
 - `gemini_api_doc_reference.py`: Contains documentation and references for Gemini 2.0.
 - `gemini_mode.py`: Real-time streaming using Gemini 2.0 APIs.
-- `kairomind_alexa_skill.py`: Integrates Alexa skills into the kairomind system.
-- `kairomind.py`: Main integration for all features and modules.
+- `Hextrix Ai_alexa_skill.py`: Integrates Alexa skills into the Hextrix Ai system.
+- `Hextrix Ai.py`: Main integration for all features and modules.
 - `local_mode.py`: Local fallback for processing audio and video without external APIs.
-- `main.py`: Entry point for running kairomind.
+- `main.py`: Entry point for running Hextrix Ai.
 - `mem_drive.py`: Memory management and cloud integration.
 - `planner_agent.py`: Multi-step planning logic and task execution.
 - `self_awareness.py`: Tracks AI self-improvement and updates.
